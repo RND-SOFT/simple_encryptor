@@ -8,8 +8,12 @@ require 'simple_encryptor/role'
 module SimpleEncryptor
   extend Configure
 
-  attr_accessor :role_cname, :adapter, :resource_adapter, :role_join_table_name, :role_table_name, :strict_rolify
-  @@resource_types = []
+  #attr_accessor :secrets_store
+  @@secrets_store = nil
+
+  def simple_enc_server options = {}
+    create_store(options[:store])
+  end
 
   def rolify(options = {})
     #options.reverse_merge!({:role_cname => 'Role'})
@@ -32,8 +36,22 @@ module SimpleEncryptor
 #    self.strict_rolify = true if options[:strict]
   end
 
-  def self.resource_types
-    @@resource_types
+  def create_store store
+    @@secrets_store = if store.is_a? String
+      -> (identifier){store}
+    elsif store.is_a? Symbol
+      -> (identifier){self.send(store, identifier)}
+    elsif store.respond_to? :call 
+      store
+    elsif store.is_a? Class
+      new store
+    end
+
+
+  end
+
+  def self.secrets_store
+    @@secrets_store
   end
 
 end
