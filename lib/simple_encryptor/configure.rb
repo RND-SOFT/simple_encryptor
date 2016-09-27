@@ -1,4 +1,4 @@
-module SimpleEncryptor
+class SimpleEncryptor
   module Configure
     @@dynamic_shortcuts = false
     @@orm = "active_record"
