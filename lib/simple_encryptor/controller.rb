@@ -16,7 +16,18 @@ module Controller
   class_methods do
 
     def simple_enc_server options = {}
-      @@simple_encryptor = SimpleEncryptor.new(options)
+      @@simple_encryptor = SimpleEncryptor::Server.new(options)
+
+      enryptor_name = options[:encryptor] || :encryptor
+
+      define_method enryptor_name do
+        @@simple_encryptor
+      end
+
+    end
+
+    def simple_enc_client options = {}
+      @@simple_encryptor = SimpleEncryptor::Client.new(options)
 
       enryptor_name = options[:encryptor] || :encryptor
 
