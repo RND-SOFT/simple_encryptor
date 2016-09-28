@@ -20,7 +20,7 @@ class ApplicationController < ActionController::Base
 end
 ```
 
-## Options for get_from_secrets
+## Options for simple_enc_server
 
 ### store
 Store can be Symbol, Block or Class. Block is called with **identifier** argument: 
