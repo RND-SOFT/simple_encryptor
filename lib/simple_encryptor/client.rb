@@ -33,15 +33,11 @@ class Client < SimpleEncryptor
   end
 
   def encrypt_message payload
-    {
-      timestamp: Time.now.to_i.to_s,
-      identifier: @identifier,
-      payload: encrypt(payload)
-    }
+    make_message encrypt(payload)
   end
 
   def decrypt_message message
-    result = message.clone
+    result = message.with_indifferent_access.clone
     result[:payload] = decrypt(result[:payload])
     result
   end
@@ -53,7 +49,7 @@ class Client < SimpleEncryptor
   end
 
   def decrypt_signed_message message
-    result = message.clone
+    result = message.with_indifferent_access.clone
     signature = result.delete(:signature)
     check_signature!(result, signature)
     result[:payload] = decrypt(result[:payload])

@@ -13,30 +13,60 @@ module Controller
 
   end
 
-  class_methods do
 
-    def simple_enc_server options = {}
-      @@simple_encryptor = SimpleEncryptor::Server.new(options)
+  if Rails::VERSION::STRING > "4.2.0"
+    class_methods do
 
-      enryptor_name = options[:encryptor] || :encryptor
+      def simple_enc_server options = {}
+        @@simple_encryptor = SimpleEncryptor::Server.new(options)
 
-      define_method enryptor_name do
-        @@simple_encryptor
+        enryptor_name = options[:encryptor] || :encryptor
+
+        define_method enryptor_name do
+          @@simple_encryptor
+        end
+
+      end
+
+      def simple_enc_client options = {}
+        @@simple_encryptor = SimpleEncryptor::Client.new(options)
+
+        enryptor_name = options[:encryptor] || :encryptor
+
+        define_method enryptor_name do
+          @@simple_encryptor
+        end
+
       end
 
     end
+  else
+    module ClassMethods
+      def simple_enc_server options = {}
+        self.class_variable_set('@@simple_encryptor', SimpleEncryptor::Server.new(options))
+        @@simple_encryptor = self.class_variable_get('@@simple_encryptor')
 
-    def simple_enc_client options = {}
-      @@simple_encryptor = SimpleEncryptor::Client.new(options)
+        enryptor_name = options[:encryptor] || :encryptor
 
-      enryptor_name = options[:encryptor] || :encryptor
+        define_method enryptor_name do
+          @@simple_encryptor
+        end
 
-      define_method enryptor_name do
-        @@simple_encryptor
+      end
+
+      def simple_enc_client options = {}
+        self.class_variable_set('@@simple_encryptor', SimpleEncryptor::Client.new(options))
+        @@simple_encryptor = self.class_variable_get('@@simple_encryptor')
+
+        enryptor_name = options[:encryptor] || :encryptor
+
+        define_method enryptor_name do
+          @@simple_encryptor
+        end
+
       end
 
     end
-
   end
 
 end
