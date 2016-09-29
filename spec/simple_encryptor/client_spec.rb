@@ -21,10 +21,12 @@ RSpec.describe SimpleEncryptor::Client, type: :class do
   it 'client can create and check signature' do
 
     signature1 = @encryptor.calculate_signature(@params)
+    message1 = @params.merge(signature: @etalon1)
+    message_invalid = @params.merge(signature: "another")
 
     expect(signature1).to eq @etalon1
-    expect(@encryptor.check_signature(@params, @etalon1)).to eq true
-    expect(@encryptor.check_signature(@params, "another")).to eq false
+    expect(@encryptor.check_signature(message1)).to eq true
+    expect(@encryptor.check_signature(message_invalid)).to eq false
 
   end
 

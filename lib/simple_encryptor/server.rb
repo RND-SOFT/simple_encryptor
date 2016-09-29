@@ -2,87 +2,81 @@
 class SimpleEncryptor
 class Server < SimpleEncryptor
 
-  attr_accessor :secrets_store
+  attr_accessor :request_param_name
 
   def initialize options
     super
-    create_store options[:store]
-  end
 
-  def secret identifier
-    s = @secrets_store.call(identifier)
-    raise SecretInvalid.new() if s.blank?
-    return s
+    create_store options[:store]
+    @request_param_name = (options[:param_name] || :encrypted_message).to_s
   end
 
   def encrypt identifier, data
-    return @cipher.encrypt(secret(identifier), data)
+    encrypt_raw identifier, data
   end
 
   def decrypt identifier, data
-    return @cipher.decrypt(secret(identifier), data)
+    decrypt_raw identifier, data
   end
 
-  def calculate_signature identifier, params
-    return calculate_signature_impl(secret(identifier), params)
+  def calculate_signature identifier, message
+    calculate_signature_raw identifier, message
   end
 
-  def check_signature identifier, params, signature
-    return check_signature_impl(secret(identifier), params, signature)
+  def check_signature message, identifier = nil
+    if identifier.nil?
+      return super(message)
+    else
+      result = message.with_indifferent_access.clone
+      signature = result.delete(:signature)
+      return calculate_signature_raw(identifier, result) == signature
+    end
   end
 
-  def check_signature! identifier, params, signature
-    return check_signature_impl!(secret(identifier), params, signature)
+  def check_signature! message, identifier = nil
+    raise SignatureFailed.new() unless check_signature(message, identifier)
   end
 
-  def check_message_signature message
-    result = message.with_indifferent_access.clone
-    return check_signature(result[:identifier], result, result.delete(:signature))
-  end
 
   def encrypt_message identifier, payload
-    return {
-      timestamp: Time.now.to_i.to_s,
-      identifier: identifier,
-      payload: encrypt(identifier, payload)
-    }
-  end
-
-  def decrypt_message message
-    result = message.with_indifferent_access.clone
-    result[:payload] = decrypt(result[:identifier], result[:payload])
-    return result
+    make_message identifier, encrypt(identifier, payload.is_a?(String) ? payload : payload.to_json)
   end
 
   def encrypt_message_and_sign identifier, payload
-    payload = encrypt_message(identifier, payload)
-    payload[:signature] = calculate_signature(identifier, payload)
-    return payload
-  end
-
-  def decrypt_signed_message message
-    result = message.with_indifferent_access.clone
-    signature = result.delete(:signature)
-    check_signature!(result[:identifier], result, signature)
-    result[:payload] = decrypt(result[:identifier], result[:payload])
+    result = encrypt_message(identifier, payload)
+    result[:signature] = calculate_signature(identifier, result)
     return result
   end
 
 
+  def decrypt_message message
+    result = message.with_indifferent_access.clone
+    decrypted = decrypt(result[:identifier], result[:payload])
+    result[:payload] = JSON.parse(decrypted) rescue decrypted
+    return result
+  end
+
+  def decrypt_signed_message message
+    check_signature!(message)
+    return decrypt_message(message)
+  end
+
+
+  def request_valid? request_params
+    check_signature(request_params[@request_param_name])
+  end
+
+  def receive! request_params
+    decrypt_signed_message(request_params[@request_param_name])
+  end
+
+  def receive request_params
+    receive!(request_params) rescue nil
+  end
+
 private
 
-    def create_store store
-      @secrets_store = if store.is_a? String
-        -> (identifier){store}
-      elsif store.is_a? Symbol
-        -> (identifier){@ctrl.send(store, identifier)}
-      elsif store.respond_to? :call 
-        store
-      elsif store.is_a? Class
-        s = new store
-        -> (identifier){s.secret(identifier)}
-      end
-    end
+
 
 end
 end

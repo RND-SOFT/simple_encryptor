@@ -35,10 +35,14 @@ RSpec.describe SimpleEncryptor::Server, type: :class do
     expect(signature1).to eq @etalon1
     expect(signature2).to eq @etalon2
 
-    expect(@encryptor.check_signature("client1", @params, @etalon1)).to eq true
-    expect(@encryptor.check_signature("client2", @params, @etalon2)).to eq true
+    message1 = @params.merge(signature: @etalon1)
+    message2 = @params.merge(signature: @etalon2)
+    message_invalid = @params.merge(signature: "another")
 
-    expect(@encryptor.check_signature("client1", @params, "another")).to eq false
+    expect(@encryptor.check_signature(message1, "client1")).to eq true
+    expect(@encryptor.check_signature(message2, "client2")).to eq true
+
+    expect(@encryptor.check_signature(message_invalid, "client1")).to eq false
 
   end
 

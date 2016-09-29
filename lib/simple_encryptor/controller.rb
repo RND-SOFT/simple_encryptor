@@ -14,7 +14,7 @@ module Controller
   end
 
 
-  if Rails::VERSION::STRING > "4.2.0"
+  if defined?(Rails) && Rails::VERSION::STRING > "4.2.0"
     class_methods do
 
       def simple_enc_server options = {}
