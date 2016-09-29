@@ -35,6 +35,11 @@ class Server < SimpleEncryptor
     return check_signature_impl!(secret(identifier), params, signature)
   end
 
+  def check_message_signature message
+    result = message.with_indifferent_access.clone
+    return check_signature(result[:identifier], result, result.delete(:signature))
+  end
+
   def encrypt_message identifier, payload
     return {
       timestamp: Time.now.to_i.to_s,
@@ -44,7 +49,7 @@ class Server < SimpleEncryptor
   end
 
   def decrypt_message message
-    result = message.clone
+    result = message.with_indifferent_access.clone
     result[:payload] = decrypt(result[:identifier], result[:payload])
     return result
   end
@@ -56,7 +61,7 @@ class Server < SimpleEncryptor
   end
 
   def decrypt_signed_message message
-    result = message.clone
+    result = message.with_indifferent_access.clone
     signature = result.delete(:signature)
     check_signature!(result[:identifier], result, signature)
     result[:payload] = decrypt(result[:identifier], result[:payload])
@@ -74,7 +79,8 @@ private
       elsif store.respond_to? :call 
         store
       elsif store.is_a? Class
-        new store
+        s = new store
+        -> (identifier){s.secret(identifier)}
       end
     end
 
