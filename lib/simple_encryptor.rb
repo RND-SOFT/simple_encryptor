@@ -26,14 +26,14 @@ class SimpleEncryptor
   def secret identifier
     s = (@secrets_store.is_a?(String) ? @secrets_store : @secrets_store.call(identifier))
     raise SecretInvalid.new("cannot be blank") if s.blank?
-    return s
+    s
   end
 
 
   def check_signature message
     result = message.with_indifferent_access.clone
     signature = result.delete(:signature)
-    return calculate_signature_raw(result[:identifier], result) == signature
+    calculate_signature_raw(result[:identifier], result) == signature
   end
 
   def check_signature! message
@@ -41,7 +41,7 @@ class SimpleEncryptor
   end
 
   def make_message identifier, payload
-    return {
+    {
       timestamp: Time.now.to_i.to_s,
       identifier: identifier,
       payload: payload
@@ -50,21 +50,16 @@ class SimpleEncryptor
 
 
   def encrypt_raw identifier, data
-    return @cipher.encrypt(secret(identifier), data)
+    @cipher.encrypt(secret(identifier), data)
   end
 
   def decrypt_raw identifier, data
-    return @cipher.decrypt(secret(identifier), data)
+    @cipher.decrypt(secret(identifier), data)
   end
 
   def calculate_signature_raw identifier, message
-    sorted = message.to_a.sort_by do |k, v|
-      k.to_s
-    end
-
-    plain = sorted.map{|pair| pair.join('=')}.join
-
-    return Digest::MD5.hexdigest(plain + secret(identifier))
+    plain = message.to_a.sort_by{|k, _| k.to_s}.map{|pair| pair.join('=')}.join
+    Digest::MD5.hexdigest(plain + secret(identifier))
   end
 
 

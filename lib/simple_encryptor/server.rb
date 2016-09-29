@@ -25,11 +25,11 @@ class Server < SimpleEncryptor
 
   def check_signature message, identifier = nil
     if identifier.nil?
-      return super(message)
+      super(message)
     else
       result = message.with_indifferent_access.clone
       signature = result.delete(:signature)
-      return calculate_signature_raw(identifier, result) == signature
+      calculate_signature_raw(identifier, result) == signature
     end
   end
 
@@ -45,7 +45,7 @@ class Server < SimpleEncryptor
   def encrypt_message_and_sign identifier, payload
     result = encrypt_message(identifier, payload)
     result[:signature] = calculate_signature(identifier, result)
-    return result
+    result
   end
 
 
@@ -53,12 +53,12 @@ class Server < SimpleEncryptor
     result = message.with_indifferent_access.clone
     decrypted = decrypt(result[:identifier], result[:payload])
     result[:payload] = JSON.parse(decrypted) rescue decrypted
-    return result
+    result
   end
 
   def decrypt_signed_message message
     check_signature!(message)
-    return decrypt_message(message)
+    decrypt_message(message)
   end
 
 

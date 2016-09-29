@@ -35,7 +35,7 @@ class Client < SimpleEncryptor
   def encrypt_message_and_sign payload
     result = encrypt_message(payload)
     result[:signature] = calculate_signature(result)
-    return result
+    result
   end
 
 
@@ -44,12 +44,12 @@ class Client < SimpleEncryptor
     raise IdentifierInvalid.new("'#{result[:identifier]}' != '#{@identifier}'") if result[:identifier] != @identifier
     decrypted = decrypt result[:payload]
     result[:payload] = JSON.parse(decrypted) rescue decrypted
-    return result
+    result
   end
 
   def decrypt_signed_message message
     check_signature!(message)
-    return decrypt_message(message)
+    decrypt_message(message)
   end
 
   def receive response
