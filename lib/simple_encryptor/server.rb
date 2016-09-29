@@ -12,31 +12,31 @@ class Server < SimpleEncryptor
   def secret identifier
     s = @secrets_store.call(identifier)
     raise SecretInvalid.new() if s.blank?
-    return s
+    s
   end
 
   def encrypt identifier, data
-    return @cipher.encrypt(secret(identifier), data)
+    @cipher.encrypt(secret(identifier), data)
   end
 
   def decrypt identifier, data
-    return @cipher.decrypt(secret(identifier), data)
+    @cipher.decrypt(secret(identifier), data)
   end
 
   def calculate_signature identifier, params
-    return calculate_signature_impl(secret(identifier), params)
+    calculate_signature_impl(secret(identifier), params)
   end
 
   def check_signature identifier, params, signature
-    return check_signature_impl(secret(identifier), params, signature)
+    check_signature_impl(secret(identifier), params, signature)
   end
 
   def check_signature! identifier, params, signature
-    return check_signature_impl!(secret(identifier), params, signature)
+    check_signature_impl!(secret(identifier), params, signature)
   end
 
   def encrypt_message identifier, payload
-    return {
+    {
       timestamp: Time.now.to_i.to_s,
       identifier: identifier,
       payload: encrypt(identifier, payload)
@@ -46,13 +46,13 @@ class Server < SimpleEncryptor
   def decrypt_message message
     result = message.clone
     result[:payload] = decrypt(result[:identifier], result[:payload])
-    return result
+    result
   end
 
   def encrypt_message_and_sign identifier, payload
     payload = encrypt_message(identifier, payload)
     payload[:signature] = calculate_signature(identifier, payload)
-    return payload
+    payload
   end
 
   def decrypt_signed_message message
@@ -60,7 +60,7 @@ class Server < SimpleEncryptor
     signature = result.delete(:signature)
     check_signature!(result[:identifier], result, signature)
     result[:payload] = decrypt(result[:identifier], result[:payload])
-    return result
+    result
   end
 
 

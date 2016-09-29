@@ -13,27 +13,27 @@ class Client < SimpleEncryptor
   end
 
   def encrypt data
-    return @cipher.encrypt(@secret, data)
+    @cipher.encrypt(@secret, data)
   end
 
   def decrypt data
-    return @cipher.decrypt(@secret, data)
+    @cipher.decrypt(@secret, data)
   end
 
   def calculate_signature params
-    return calculate_signature_impl(@secret, params)
+    calculate_signature_impl(@secret, params)
   end
 
   def check_signature params, signature
-    return check_signature_impl(@secret, params, signature)
+    check_signature_impl(@secret, params, signature)
   end
 
   def check_signature! params, signature
-    return check_signature_impl!(@secret, params, signature)
+    check_signature_impl!(@secret, params, signature)
   end
 
   def encrypt_message payload
-    return {
+    {
       timestamp: Time.now.to_i.to_s,
       identifier: @identifier,
       payload: encrypt(payload)
@@ -43,13 +43,13 @@ class Client < SimpleEncryptor
   def decrypt_message message
     result = message.clone
     result[:payload] = decrypt(result[:payload])
-    return result
+    result
   end
 
   def encrypt_message_and_sign payload
     payload = encrypt_message(payload)
     payload[:signature] = calculate_signature(payload)
-    return payload
+    payload
   end
 
   def decrypt_signed_message message
@@ -57,7 +57,7 @@ class Client < SimpleEncryptor
     signature = result.delete(:signature)
     check_signature!(result, signature)
     result[:payload] = decrypt(result[:payload])
-    return result
+    result
   end
 
 
