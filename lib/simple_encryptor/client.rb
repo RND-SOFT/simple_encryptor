@@ -53,7 +53,7 @@ class Client < SimpleEncryptor
   end
 
   def receive response
-    decrypt_signed_message(response[@response_param_name])
+    decrypt_signed_message(response[@response_param_name]) if response[@response_param_name]
   end
 
 

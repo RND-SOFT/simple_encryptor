@@ -63,11 +63,11 @@ class Server < SimpleEncryptor
 
 
   def request_valid? request_params
-    check_signature(request_params[@request_param_name])
+    check_signature(request_params[@request_param_name]) if request_params[@request_param_name]
   end
 
   def receive! request_params
-    decrypt_signed_message(request_params[@request_param_name])
+    decrypt_signed_message(request_params[@request_param_name]) if request_params[@request_param_name]
   end
 
   def receive request_params
