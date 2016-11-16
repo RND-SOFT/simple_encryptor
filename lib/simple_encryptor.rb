@@ -7,16 +7,17 @@ require 'simple_encryptor/client'
 class SimpleEncryptor
   extend Configure
 
-  attr_accessor :ctrl, :cipher, :options
+  attr_accessor :ctrl, :cipher, :options, :skip_timestamp
   attr_accessor :secrets_store
 
   class SignatureFailed < StandardError; end
   class SecretInvalid < StandardError; end
   class IdentifierInvalid < StandardError; end
 
-  def initialize options
+  def initialize *args
     @cipher = Cipher.new
-    @options = options
+    @options = {}
+    @skip_timestamp = false
   end
 
   def set_controller ctrl
@@ -33,11 +34,13 @@ class SimpleEncryptor
   def check_signature message
     result = message.with_indifferent_access.clone
     signature = result.delete(:signature)
-    calculate_signature_raw(result[:identifier], result) == signature
+    calc_sig = calculate_signature_raw(result[:identifier], result)
+    ts = Time.parse(result[:timestamp]) rescue Time.at(0)
+    calc_sig == signature and ( @skip_timestamp or ts > (Time.now - 2 * 60) )
   end
 
-  def check_signature! message
-    raise SignatureFailed.new() unless check_signature(message)
+  def check_signature! *args
+    raise SignatureFailed.new() unless check_signature(*args)
   end
 
   def make_message identifier, payload
@@ -65,16 +68,25 @@ class SimpleEncryptor
 
 
   def create_store store
-    @secrets_store = if store.is_a? String
-      store
-    elsif store.is_a? Symbol
-      -> (identifier){@ctrl.send(store, identifier)}
-    elsif store.respond_to? :call 
-      store
-    elsif store.is_a? Class
-      s = new store
-      -> (identifier){s.secret(identifier)}
+    @secrets_store = make_callable(store)
+  end
+
+  def make_callable obj
+    if obj.is_a? String
+      obj
+    elsif obj.is_a? Symbol
+      -> (identifier){ @ctrl.send(obj, identifier) }
+    elsif obj.respond_to? :call 
+      obj
+    elsif obj.is_a? Class
+      -> (identifier){ obj.new.secret(identifier) }
     end
+  end
+
+  def rails_secrets
+    return {} unless defined?(Rails) and Rails::VERSION::STRING > "4.1.0"
+    config_key = options[:config_key] || :simple_encryptor
+    Rails.application.secrets.fetch( config_key, {})
   end
 
 end

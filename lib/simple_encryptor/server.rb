@@ -4,11 +4,15 @@ class Server < SimpleEncryptor
 
   attr_accessor :request_param_name
 
-  def initialize options
+  def initialize store = nil, options = {}
     super
+    @options = options
+    if store.is_a? Hash 
+      store, @options = nil, store
+    end
 
-    create_store options[:store]
-    @request_param_name = (options[:param_name] || :encrypted_message).to_s
+    create_store(store || @options[:store] || rails_secrets['secret'])
+    @request_param_name = (@options[:param_name] || :encrypted_message).to_s
   end
 
   def encrypt identifier, data
@@ -33,8 +37,8 @@ class Server < SimpleEncryptor
     end
   end
 
-  def check_signature! message, identifier = nil
-    raise SignatureFailed.new() unless check_signature(message, identifier)
+  def check_signature! *args
+    raise SignatureFailed.new() unless check_signature(*args)
   end
 
 
@@ -66,12 +70,12 @@ class Server < SimpleEncryptor
     check_signature(request_params[@request_param_name]) if request_params[@request_param_name]
   end
 
-  def receive! request_params
-    decrypt_signed_message(request_params[@request_param_name]) if request_params[@request_param_name]
+  def receive! request_params, *args
+    decrypt_signed_message(request_params[@request_param_name], *args) if request_params[@request_param_name]
   end
 
-  def receive request_params
-    receive!(request_params) rescue nil
+  def receive *args
+    receive!(*args) rescue nil
   end
 
 private

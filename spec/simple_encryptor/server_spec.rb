@@ -11,6 +11,7 @@ RSpec.describe SimpleEncryptor::Server, type: :class do
     @encryptor = SimpleEncryptor::Server.new({
       store: ->(identifier) {@store[identifier]},
     })
+    @encryptor.skip_timestamp = true
 
     @params = {
       key1: 'hello',
@@ -122,4 +123,46 @@ RSpec.describe SimpleEncryptor::Server, type: :class do
     
   end
 
+  describe 'server can initialized by' do
+    before(:all) do
+      class ::Rails
+        module VERSION 
+          STRING = '4.2.1'
+        end
+
+        def self.application
+          conf = {simple_encryptor: { 
+                    'secret'     => 'secret', 
+                    'identifier' => 'identifier' } 
+                  }
+          def conf.secrets
+            self
+          end
+          conf
+        end
+
+      end
+
+    end
+
+    it 'nil' do
+      server = SimpleEncryptor::Server.new
+      expect(server.secrets_store).to eq 'secret'
+      expect(server.options).to       eq({})
+    end
+    
+    it 'only secret' do
+      server = SimpleEncryptor::Server.new 'secret2'
+      expect(server.secrets_store).to eq 'secret2'
+      expect(server.options).to       eq({})
+    end
+    
+    it 'all' do
+      opts = { params1: 1}
+      server = SimpleEncryptor::Server.new 'secret2', opts
+      expect(server.secrets_store).to eq 'secret2'
+      expect(server.options).to       eq(opts)
+    end
+    
+  end
 end

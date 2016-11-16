@@ -2,18 +2,29 @@
 class SimpleEncryptor
 class Client < SimpleEncryptor
 
-  attr_accessor :response_param_name
+  attr_accessor :response_param_name, :identifier
 
-  def initialize options
+  def initialize secret = nil, identifier = nil, options = {}
     super
+    @options = options
+    if secret.is_a?(Hash)
+      secret, identifier, @options = nil, nil, secret
+    end
 
-    @identifier = options[:identifier]
+    if secret.present? and identifier.is_a?(Hash)
+      identifier, @options = nil, identifier
+    end
+
+    @identifier = identifier || @options[:identifier] || rails_secrets['identifier']
     raise IdentifierInvalid.new("cannot be blank") if @identifier.blank?
 
-    raise SecretInvalid.new("cannot be blank") if options[:secret].blank?
-    create_store options[:secret]
+    @identifier = make_callable(@identifier)
 
-    @response_param_name = (options[:param_name] || :encrypted_response).to_s
+    secret ||= @options[:secret] || rails_secrets['secret']
+    raise SecretInvalid.new("cannot be blank") if secret.blank?
+    create_store secret
+
+    @response_param_name = (@options[:param_name] || :encrypted_response).to_s
   end
 
   def encrypt data

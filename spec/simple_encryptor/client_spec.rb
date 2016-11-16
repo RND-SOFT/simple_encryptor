@@ -7,6 +7,7 @@ RSpec.describe SimpleEncryptor::Client, type: :class do
       identifier: 'client1',
       secret: 'secret1_loooooooooooooooooooooooooooong',
     })
+    @encryptor.skip_timestamp = true
 
     @params = {
       key1: 'hello',
@@ -99,5 +100,65 @@ RSpec.describe SimpleEncryptor::Client, type: :class do
     end
     
   end
+
+  describe 'client can initialized by' do
+    before(:all) do
+      class ::Rails
+        module VERSION 
+          STRING = '4.2.1'
+        end
+
+        def self.application
+          conf = {simple_encryptor: { 
+                    'secret'     => 'secret', 
+                    'identifier' => 'identifier' } 
+                  }
+          def conf.secrets
+            self
+          end
+          conf
+        end
+
+      end
+
+    end
+
+    it 'nil' do
+      client = SimpleEncryptor::Client.new
+      expect(client.secrets_store).to eq 'secret'
+      expect(client.identifier).to    eq 'identifier'
+      expect(client.options).to       eq({})
+    end
+    
+    it 'only secret' do
+      client = SimpleEncryptor::Client.new 'secret2'
+      expect(client.secrets_store).to eq 'secret2'
+      expect(client.identifier).to    eq 'identifier'
+      expect(client.options).to       eq({})
+
+      opts = { params1: 1}
+      client = SimpleEncryptor::Client.new 'secret2', nil, opts
+      expect(client.secrets_store).to eq 'secret2'
+      expect(client.identifier).to    eq 'identifier'
+      expect(client.options).to       eq(opts)
+    end
+    
+    it 'secret and identifier' do
+      client = SimpleEncryptor::Client.new 'secret2', 'id2'
+      expect(client.secrets_store).to eq 'secret2'
+      expect(client.identifier).to    eq 'id2'
+      expect(client.options).to       eq({})
+    end
+    
+    it 'all' do
+      opts = { params1: 1}
+      client = SimpleEncryptor::Client.new 'secret2', 'id2', opts
+      expect(client.secrets_store).to eq 'secret2'
+      expect(client.identifier).to    eq 'id2'
+      expect(client.options).to       eq(opts)
+    end
+    
+  end
+
 
 end

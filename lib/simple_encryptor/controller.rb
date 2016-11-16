@@ -17,8 +17,8 @@ module Controller
   if defined?(Rails) && Rails::VERSION::STRING > "4.2.0"
     class_methods do
 
-      def simple_enc_server options = {}
-        @@simple_encryptor = SimpleEncryptor::Server.new(options)
+      def simple_enc_server secret = nil, options = {}
+        @@simple_encryptor = SimpleEncryptor::Server.new(secret, options)
 
         enryptor_name = options[:encryptor] || :encryptor
 
@@ -28,8 +28,8 @@ module Controller
 
       end
 
-      def simple_enc_client options = {}
-        @@simple_encryptor = SimpleEncryptor::Client.new(options)
+      def simple_enc_client secret = nil, identifier = nil, options = {}
+        @@simple_encryptor = SimpleEncryptor::Client.new(secret, identifier, options)
 
         enryptor_name = options[:encryptor] || :encryptor
 
