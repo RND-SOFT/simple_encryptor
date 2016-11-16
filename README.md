@@ -12,6 +12,7 @@ Server means a server whose API can be called by multiple client. Server must sh
 
 ```ruby
 class ApplicationController < ActionController::Base
+  include SimpleEncryptor::Controller
   simple_enc_server store: :get_from_secrets , encryptor: :encryptor
 
   def get_from_secrets(identifier)
@@ -35,6 +36,7 @@ This is name of the SimpleEncryptor object attached for the controller. Default 
 
 ```ruby
 class ApplicationController < ActionController::Base
+  include SimpleEncryptor::Controller
   simple_enc_server store: :get_from_secrets , encryptor: :my_encryptor
 
   def some_action
