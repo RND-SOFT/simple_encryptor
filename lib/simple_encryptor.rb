@@ -35,7 +35,7 @@ class SimpleEncryptor
     result = message.with_indifferent_access.clone
     signature = result.delete(:signature)
     calc_sig = calculate_signature_raw(result[:identifier], result)
-    ts = Time.parse(result[:timestamp]) rescue Time.at(0)
+    ts = Time.at(result[:timestamp].to_i) rescue Time.at(0)
     calc_sig == signature and ( @skip_timestamp or ts > (Time.now - 2 * 60) )
   end
 
@@ -61,11 +61,15 @@ class SimpleEncryptor
   end
 
   def calculate_signature_raw identifier, message
-    plain = message.to_a.sort_by{|k, _| k.to_s}.map{|pair| pair.join('=')}.join
-    Digest::MD5.hexdigest(plain + secret(identifier))
+    Digest::MD5.hexdigest(normalize_hash(message) + secret(identifier))
   end
 
-
+  def normalize_hash hash
+    hash.to_a.sort_by{|k, _| k.to_s}.map do |k, v|
+      v = normalize_hash(v) if v.is_a?(Hash)
+      [k, v].join("=")
+    end.join
+  end
 
   def create_store store
     @secrets_store = make_callable(store)

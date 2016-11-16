@@ -39,6 +39,12 @@ class Client < SimpleEncryptor
     calculate_signature_raw @identifier, message
   end
 
+  def sign_message payload
+    result = make_message(@identifier, payload)
+    result[:signature] = calculate_signature(result)
+    result
+  end
+
   def encrypt_message payload
     make_message @identifier, encrypt(payload.is_a?(String) ? payload : payload.to_json)
   end

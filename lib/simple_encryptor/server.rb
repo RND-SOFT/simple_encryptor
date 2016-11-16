@@ -42,6 +42,16 @@ class Server < SimpleEncryptor
   end
 
 
+  def sign_message identifier, payload
+    make_message identifier, calculate_signature(identifier, payload)
+  end
+
+  def sign_message identifier, payload
+    result = make_message(identifier, payload)
+    result[:signature] = calculate_signature(identifier, result)
+    result
+  end
+
   def encrypt_message identifier, payload
     make_message identifier, encrypt(identifier, payload.is_a?(String) ? payload : payload.to_json)
   end

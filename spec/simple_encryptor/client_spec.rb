@@ -31,6 +31,18 @@ RSpec.describe SimpleEncryptor::Client, type: :class do
 
   end
 
+  it 'client can check signature timestamp' do
+    @encryptor.skip_timestamp = false
+    msg = @encryptor.sign_message( q: '1' )
+    expect(@encryptor.check_signature(msg)).to eq true
+
+    allow(Time).to receive(:now).and_return(12312)
+    msg = @encryptor.sign_message( q: '1' )
+    allow(Time).to receive(:now).and_return(1231231231)
+    expect(@encryptor.check_signature(msg)).to eq false
+    @encryptor.skip_timestamp = true
+  end
+
   it 'client can encrypt and decrypt data' do
 
     data1 = "data1"
@@ -158,6 +170,12 @@ RSpec.describe SimpleEncryptor::Client, type: :class do
       expect(client.options).to       eq(opts)
     end
     
+  end
+
+  it 'normilize hash by tree' do
+    hash = { q: { w: { e: '4' }}}
+    nhash = @encryptor.normalize_hash hash
+    expect(nhash).to eq('q=w=e=4')
   end
 
 
