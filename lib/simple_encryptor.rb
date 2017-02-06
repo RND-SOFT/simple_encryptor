@@ -36,7 +36,8 @@ class SimpleEncryptor
     signature = result.delete(:signature)
     calc_sig = calculate_signature_raw(result[:identifier], result)
     ts = Time.at(result[:timestamp].to_i) rescue Time.at(0)
-    calc_sig == signature and ( @skip_timestamp or ts > (Time.now - 2 * 60) )
+    ts_ok = ts.between?(Time.now - 2 * 60, Time.now + 2 * 60)
+    calc_sig == signature and ( @skip_timestamp || ts_ok )
   end
 
   def check_signature! *args

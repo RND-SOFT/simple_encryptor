@@ -36,12 +36,37 @@ RSpec.describe SimpleEncryptor::Client, type: :class do
     msg = @encryptor.sign_message( q: '1' )
     expect(@encryptor.check_signature(msg)).to eq true
 
-    allow(Time).to receive(:now).and_return(12312)
+    allow(Time).to receive(:now).and_return(Time.at(12312))
     msg = @encryptor.sign_message( q: '1' )
-    allow(Time).to receive(:now).and_return(1231231231)
+    allow(Time).to receive(:now).and_return(Time.at(1231231231))
     expect(@encryptor.check_signature(msg)).to eq false
     @encryptor.skip_timestamp = true
   end
+
+
+   it 'client must fail signature check gr/less 2*60 timestamp' do
+    @encryptor.skip_timestamp = false
+
+    ts_now = Time.now
+    allow(Time).to receive(:now).and_return(ts_now)
+    msg = @encryptor.sign_message( q: '2' )
+    expect(@encryptor.check_signature(msg)).to eq true
+
+
+    allow(Time).to receive(:now).and_return(ts_now - 1 * 60)
+    expect(@encryptor.check_signature(msg)).to eq true
+
+    allow(Time).to receive(:now).and_return(ts_now + 1 * 60)
+    expect(@encryptor.check_signature(msg)).to eq true
+
+    allow(Time).to receive(:now).and_return(ts_now + 2 * 62)
+    expect(@encryptor.check_signature(msg)).to eq false
+
+    allow(Time).to receive(:now).and_return(ts_now - 2 * 62)
+    expect(@encryptor.check_signature(msg)).to eq false
+
+    @encryptor.skip_timestamp = true
+   end
 
   it 'client can encrypt and decrypt data' do
 
